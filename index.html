@@ -404,7 +404,7 @@ button{transition:transform .08s,filter .15s,box-shadow .12s}
  <div id="spec" class="hide"><div class="spt"><small>MENONTON</small><b id="spN"></b><span id="spI"></span></div><button class="spl" id="spL"><svg class="ic"><use href="#i-heart"/></svg><b id="spC">0</b></button></div>
  <div id="specB" class="hide"><div class="spc" id="specL"></div><button class="bt2 g spr" id="spR">Hasil</button></div>
 </div>
-<div id="lobby" class="hide">
+<div id="lobby" class="hide"><button class="pmode" id="bOnl" style="position:absolute;top:calc(var(--u)*2);left:50%;transform:translateX(-50%);z-index:6">ONLINE</button>
  <div class="top">
   <div class="pf" id="bProf"><div class="av"><svg viewBox="0 0 64 64"><defs><linearGradient id="avg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4f86ff"/><stop offset="1" stop-color="#1b2a7a"/></linearGradient></defs><rect width="64" height="64" fill="url(#avg)"/><path d="M6 64c2-15 13-19 26-19s24 4 26 19z" fill="#e53935"/><path d="M26 46h12l-6 7z" fill="#fff"/><circle cx="32" cy="30" r="15" fill="#ffd3a8"/><path d="M16 30a16 16 0 0 1 32 0v3H16z" fill="#ffb020"/><rect x="30" y="14" width="4" height="19" fill="#fff" opacity=".85"/><rect x="17" y="28" width="30" height="9" rx="4.5" fill="#1b2340"/><circle cx="25.500" cy="32.500" r="2.800" fill="#7ee7ff"/><circle cx="38.500" cy="32.500" r="2.800" fill="#7ee7ff"/><circle cx="24.600" cy="31.600" r="1" fill="#fff"/><circle cx="37.600" cy="31.600" r="1" fill="#fff"/><path d="M26.500 42q5.500 4.500 11 0" stroke="#7a3b1a" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="21" cy="40" r="2.400" fill="#ff8a8a" opacity=".6"/><circle cx="43" cy="40" r="2.400" fill="#ff8a8a" opacity=".6"/></svg></div><div><div class="admt sm hide" id="pAdm">【ADMIN】</div><div id="pName">Turbo Racer</div><div id="pId">ID: 0</div></div></div>
   <div class="cur"><svg class="ic"><use href="#i-gold"/></svg><b id="coin">0</b><button class="pl" id="bPlus" aria-label="Buka toko"><svg class="ic"><use href="#i-plus"/></svg></button></div>
@@ -453,6 +453,7 @@ button{transition:transform .08s,filter .15s,box-shadow .12s}
 <div class="ptb"><div class="pgrid" id="pGrid"></div><div class="pchat"><div class="cl" id="cL"></div><div class="cr"><input id="cIn" maxlength="60" placeholder="Ketik pesan..." autocomplete="off"><button class="csend" id="cSend">Kirim</button></div></div></div>
 <button class="bstart pgo" id="pGo">MULAI!</button></div></div>
 <div id="modeP" class="scr hide"><div class="pc k"><div class="ph"><svg class="ic"><use href="#i-flag"/></svg><h3>Pilih Mode</h3><button class="x" data-close="modeP"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pb"><div class="mps"><button class="mk " data-m="rank"><span class="mi"><svg class="ic"><use href="#i-crown"/></svg></span>Ranked<small>Naik tier, jadi juara</small></button><button class="mk " data-m="classic"><span class="mi"><svg class="ic"><use href="#i-flag"/></svg></span>Classic<small>Pilih lintasan sendiri</small></button><button class="mk" data-m="tour" id="mkTour"><span class="mi"><svg class="ic"><use href="#i-medal"/></svg></span>Turnamen<small id="tourSm"></small></button></div></div></div></div>
+<div id="onlP" class="scr hide"><div class="pc s"><div class="ph"><svg class="ic"><use href="#i-user"/></svg><h3>Mabar Online</h3><button class="x" id="onlX"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pb"><button class="csend" id="onlNew" style="width:100%">Buat Room</button><div class="lb">Atau masukkan kode room teman</div><div class="cr rdr"><input id="onlIn" maxlength="5" placeholder="KODE" autocomplete="off" style="text-transform:uppercase"><button class="csend" id="onlJoin">Gabung</button></div><div class="lb" id="onlMsg"></div></div></div></div>
 <div id="invP" class="scr hide"><div class="pc s"><div class="ph"><svg class="ic"><use href="#i-mail"/></svg><h3>Undangan Balap</h3></div><div class="pb"><div class="ivr"><div class="fav big" id="ivAv"></div><div><div class="ivn" id="ivN"></div><div class="ivs">mengundangmu bermain</div><div class="chip" id="ivM"></div></div></div><div class="ivb"><button class="bt2 r" id="ivNo">Tolak</button><button class="bt2 g" id="ivYes">Terima</button></div></div></div></div>
 <div id="redP" class="scr hide"><div class="pc s"><div class="ph"><svg class="ic"><use href="#i-gift"/></svg><h3>Kode Redeem</h3><button class="x" data-close="redP"><svg class="ic"><use href="#i-x"/></svg></button></div>
  <div class="pb"><div class="lb" style="margin-top:0">Masukkan kode hadiah</div><div class="cr rdr"><input id="rIn" maxlength="20" placeholder="KODE-ANDA" autocomplete="off"><button class="csend" id="rGo">Tukar</button></div><div class="hint" id="rMsg">Kode hanya bisa dipakai 1x per akun.</div></div></div></div>
@@ -1038,7 +1039,7 @@ function resetCars(){
  if(ONL)cars.forEach(c=>{const t=nameTag(c);c.m.add(t);c.m.userData.tag=t;t.visible=c!==me});
  obs.forEach(o=>{o.hit=false;o.t=0;o.fl=0;o.h=0;o.by=null;o.m.visible=true;if(o.s0!=null&&(o.s!==o.s0||o.d!==o.d0)){o.s=o.s0;o.d=o.d0;orient(o.m,frame(o.s),o.d,oy[o.ty]);o.y=o.m.position.y}o.m.position.y=o.y;o.m.rotation.x=0});
  if(tuns.length){tuns.forEach(t=>t.on=false);hemiL.intensity=baseHemi;if(tun&&tun.water){scene.background.copy(tun.nc);scene.fog.color.copy(tun.nc)}}
- spawnRk();cars.forEach(place);
+ spawnRk();onlCars();cars.forEach(place);
 }
 
 /* ===== Input ===== */
@@ -1083,7 +1084,7 @@ cols.forEach((c,i)=>{const b=document.createElement('button');b.className='sw'+(
 [1,2,3,5].forEach(n=>{const b=document.createElement('button');b.className='lp'+(n===2?' sel':'');b.textContent=n;
  b.onclick=()=>{lapsN=lapsPref=n;[...lps.children].forEach(x=>x.classList.toggle('sel',x===b));updBest()};lps.appendChild(b)});
 const show=(id,v)=>$(id).classList.toggle('hide',!v);
-function startRace(){initAudio();resetCars();show('menu',0);show('lobby',0);show('res',0);show('pause',0);show('hud',1);state='count';cdT=3.2;lastCd=-1;msgT('',0)}
+function startRace(){if(RC&&!onlGoing){onlLaunch();return}initAudio();resetCars();show('menu',0);show('lobby',0);show('res',0);show('pause',0);show('hud',1);state='count';cdT=3.2;lastCd=-1;msgT('',0)}
 function toMenu(){state='menu';show('hud',0);show('res',0);show('pause',0);show('menu',0);show('lobby',1);lapsN=lapsPref;if(TN||MAPS[curMap].rk){TN=null;const sl=[...mapsEl.children].findIndex(x=>x.classList.contains('sel'));buildMap(sl<0?0:sl)}resetCars();updBest()}
 function pause(){if(state==='count'||state==='race'){prevSt=state;state='paused';show('pause',1)}}
 $('bStart').onclick=startRace;$('bAgain').onclick=()=>{if(mode==='tour'&&TN)tourShow();else startRace()};
@@ -1209,6 +1210,7 @@ function tunUpdate(dt){
 function stepCars(dt){
  const racing=state==='race'||state==='done',pl=me;
  for(const c of cars){
+  if(c.rm){rmStep(c,dt);continue}
   if(c===me&&!c.fin){c.in.steer=inp.r-inp.l;c.in.brake=inp.b;c.in.nit=!!inp.n}else ai(c);
   if(!racing){c.in.steer=0;c.in.brake=0;c.in.nit=false}
   if(c.cr){c.in.steer=0;c.in.nit=false;c.in.brake=1;crUpdate(c,dt)}
@@ -1486,7 +1488,7 @@ function tourShow(){const b=tourBoard(),last=TN.res.length>=TOUR.rounds,k=b.find
  $('tourH').textContent=last?(k<=3?'Hadiah '+TOUR.prize[k-1]+' coin sudah masuk.':'Hadiah coin hanya untuk juara 1-3.'):'Ronde berikutnya: '+MAPS[TN.maps[TN.round+1]].n;
  $('tourOk').textContent=last?'Selesai':'Ronde berikutnya';show('tourP',1)}
 $('tourOk').onclick=()=>{if(!TN)return;if(TN.res.length>=TOUR.rounds){show('tourP',0);toMenu();return}TN.round++;tourRound()};
-$('pGo').onclick=()=>{if(amHost()){goRace();return}
+$('pGo').onclick=()=>{if(RC){onlGo();return}if(amHost()){goRace();return}
  if(rdy){rdy=0;renderParty();toast('Siap dibatalkan');return}
  rdy=1;renderParty();sysMsg('Kamu siap');toast('Kamu siap! Menunggu host...');setTimeout(()=>{if(pOpen()&&rdy)goRace()},2200)};
 const CAN=['Siap gas!','Ayo mulai','Jangan nabrak ya','Tunggu bentar','Mantap!','GG nanti','Aku pakai nitro terus','Mode-nya seru nih'];
@@ -1669,12 +1671,54 @@ function loop(now){
    if(cdT<=0){state='race';msgT('GO!',900);beep(880,.5,'square',.09)}
    else if(n!==lastCd){lastCd=n;msgT(String(n),0);beep(440,.2,'square',.07)}}
   else if(state==='race'||state==='done')raceT+=dt;
-  {const n=Math.max(1,Math.ceil(dt/.034));for(let k=0;k<n;k++)stepCars(dt/n)}if(state==='race'&&me.fin){if(!spec&&raceT-me.ft>1.4)startSpec();specTick()}tunUpdate(dt);follow(dt);rkTick();hud();
+  {const n=Math.max(1,Math.ceil(dt/.034));for(let k=0;k<n;k++)stepCars(dt/n)}if(state==='race'&&me.fin){if(!spec&&raceT-me.ft>1.4)startSpec();specTick()}tunUpdate(dt);follow(dt);rkTick();hud();onlTick(dt);
  }
  if(eg){eg.gain.value=(muted||state==='menu'||state==='done')?0:.025;eo.frequency.value=50+me.v*2.2+(me.bst?25:0)}
  if(pvOn)pvTick(dt);
  if(!(pvOn||shOn))renderer.render(scene,cam);
 }
+/* ===== MABAR ONLINE: room berkode + sinkron mobil ===== */
+const X=window.__fb||{};let RC=null,rRef=null,sRef=null,RS={},sT=0,lastGo=null,onlGoing=0;
+const rid=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let t="";for(let i=0;i<5;i++)t+=a[Math.random()*a.length|0];return t};
+const omsg=t=>{$("onlMsg").textContent=t||""};
+async function onlEnter(code,host){
+ const u=X.uid();RC=code;lastGo=null;RS={};rRef=X.db.ref("rooms/"+code);sRef=rRef.child("s");
+ if(host){await rRef.set({h:u,t:Date.now()});rRef.onDisconnect().remove()}
+ const m=rRef.child("p/"+u);m.onDisconnect().remove();sRef.child(u).onDisconnect().remove();
+ await m.set({id:pid,name:pname,rk:RKS.lv|0,r:0});
+ mode="classic";syncMode();rdy=0;
+ sRef.on("value",q=>{RS=q.val()||{}});rRef.on("value",onlSnap);
+ show("onlP",0);show("lobby",0);show("party",1);sysMsg("Kode room: "+code);toast("Kode room: "+code)}
+function onlLeave(closed){if(!RC)return;const u=X.uid(),h=amHost();rRef.off();sRef.off();
+ if(!closed){try{sRef.child(u).remove();if(h)rRef.remove();else rRef.child("p/"+u).remove()}catch(e){}}
+ RC=null;RS={};party=[meM(1)];chat=[];rdy=0;show("party",0);show("lobby",1);renderParty();if(closed)toast("Room ditutup oleh host")}
+function onlSnap(q){const v=q.val();if(!v){onlLeave(1);return}
+ const u=X.uid(),p=v.p||{};if(!p[u])return;
+ const ks=Object.keys(p).sort((a,b)=>a===v.h?-1:b===v.h?1:a<b?-1:1);
+ party=ks.map(k=>({uid:k,id:p[k].id,name:p[k].name,h:(parseInt(p[k].id)*47)%340,rk:p[k].rk|0,me:k===u?1:0,host:k===v.h?1:0,ready:p[k].r?1:0}));
+ rdy=p[u].r?1:0;if(mode!=="classic"){mode="classic";syncMode()}
+ if(lastGo===null)lastGo=v.go||0;
+ else if(v.go&&v.go!==lastGo){lastGo=v.go;rdy=0;rRef.child("p/"+u+"/r").set(0);sRef.child(u).remove();
+  if(v.m!=null)buildMap(v.m);lapsN=v.l||2;onlGoing=1;show("party",0);startRace();onlGoing=0;return}
+ renderParty();$("pBot").classList.add("hide");$("pLeave").classList.remove("hide")}
+function onlGo(){if(amHost()){if(party.some(m=>!m.host&&!m.ready)){toast("Tunggu semua pemain siap");return}if(party.length<2){toast("Belum ada pemain lain");return}goRace()}
+ else rRef.child("p/"+X.uid()+"/r").set(rdy?0:1)}
+function onlLaunch(){if(amHost())rRef.update({go:Date.now(),m:curMap,l:lapsN});else toast("Menunggu host memulai...")}
+function onlCars(){if(!RC||party.length<2)return;const u=X.uid(),o=party.filter(m=>!m.me),ps=party.map(m=>m.uid).sort(),n=ps.length,sp=Math.min(5,16.6/(n-1));
+ cars.forEach((c,i)=>{c.uid=i?o[i-1].uid:u;if(i){c.rm=1;c.bot=false}c.d=c.lane=(ps.indexOf(c.uid)-(n-1)/2)*sp})}
+function rmStep(c,dt){const r=RS[c.uid];
+ if(!r){c.miss=(c.miss||0)+dt;c.v=0;if(state==="race"&&c.miss>4&&!c.fin){c.fin=true;c.ft=raceT+999}return}
+ c.miss=0;if(state==="count"){c.v=0;return}
+ c.v=r.v||0;c.s+=c.v*dt;c.s+=((r.s||0)-c.s)*Math.min(1,dt*6);c.d+=((r.d||0)-c.d)*Math.min(1,dt*10);
+ c.y=r.y||0;c.air=!!r.a;c.bst=!!r.b;if(r.f&&!c.fin&&state==="race"&&raceT>2){c.fin=true;c.ft=r.ft||raceT}}
+function onlTick(dt){if(!RC||state==="menu"||state==="paused")return;sT+=dt;if(sT<.1)return;sT=0;
+ sRef.child(X.uid()).set({s:+me.s.toFixed(1),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
+$("bOnl").onclick=()=>{if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){show("lobby",0);show("party",1);renderParty();return}omsg("");show("onlP",1)};
+$("onlX").onclick=()=>show("onlP",0);
+$("onlNew").onclick=async()=>{try{omsg("Membuat room...");await onlEnter(rid(),1)}catch(e){RC=null;omsg("Gagal: "+(e.code||e.message))}};
+$("onlJoin").onclick=async()=>{const c=$("onlIn").value.trim().toUpperCase();if(c.length<5){omsg("Kode room 5 karakter");return}
+ try{const v=(await X.db.ref("rooms/"+c).get()).val();if(!v){omsg("Room tidak ditemukan");return}if(Object.keys(v.p||{}).length>=6){omsg("Room penuh (6/6)");return}await onlEnter(c,0)}catch(e){RC=null;omsg("Gagal: "+(e.code||e.message))}};
+{const pl=$("pLeave").onclick;$("pLeave").onclick=()=>{if(RC){onlLeave();return}pl()}}
 buildMap(0);resetCars();updBest();layout();requestAnimationFrame(loop);
 };
 </script>
@@ -1782,7 +1826,7 @@ const out=$('bOut');if(out)out.onclick=async()=>{
 if(typeof firebase==='undefined'){view('none');$('gLoad').style.display='block';$('gLoad').textContent='Tidak bisa terhubung ke Firebase. Cek internet, lalu muat ulang.';$('gOff').style.display='block'}
 else{
  try{
-  firebase.initializeApp(FB);auth=firebase.auth();db=firebase.database();
+  firebase.initializeApp(FB);auth=firebase.auth();db=firebase.database();window.__fb={get db(){return db},uid:()=>UID};
   auth.onAuthStateChanged(u=>{if(started||busy)return;if(u){busy=true;enter(u)}else{view('form');setMode('in')}});
   setTimeout(()=>{if(!started&&$('gLoad').style.display!=='none'&&!busy){view('form')}},7000);
  }catch(e){$('gLoad').textContent='Firebase gagal dimulai: '+(e.message||e);$('gOff').style.display='block'}

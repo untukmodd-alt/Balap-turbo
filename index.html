@@ -359,6 +359,7 @@ button{transition:transform .08s,filter .15s,box-shadow .12s}
 .hiR small{font-size:calc(var(--u)*2.2);font-weight:800;line-height:1.25}
 .hiR small b{font-size:calc(var(--u)*2.6);color:#ffd23a;font-style:italic}
 .mrow{display:flex;align-items:center;gap:calc(var(--u)*2);padding:calc(var(--u)*1.4) calc(var(--u)*2);border-radius:calc(var(--u)*2.4);background:rgba(255,255,255,.07);margin-bottom:calc(var(--u)*1.2)}
+#rlL{max-height:calc(var(--u)*42);overflow-y:auto;margin-top:calc(var(--u)*1.2)}.rlr{cursor:pointer}.rlr.full{opacity:.5}
 .mrow .fav{width:calc(var(--u)*9);height:calc(var(--u)*9);border-radius:calc(var(--u)*2);overflow:hidden;flex:none}
 .mrow .fav svg,.mrow .fav img{width:100%;height:100%;display:block}
 .mrow .mt{flex:1;text-align:left;min-width:0}.mrow .mt b{display:block;font-size:calc(var(--u)*3.4)}.mrow .mt small{opacity:.7;font-size:calc(var(--u)*2.4)}
@@ -465,7 +466,7 @@ button{transition:transform .08s,filter .15s,box-shadow .12s}
 <div class="ptb"><div class="pgrid" id="pGrid"></div><div class="pchat"><div class="cl" id="cL"></div><div class="cr"><input id="cIn" maxlength="60" placeholder="Ketik pesan..." autocomplete="off"><button class="csend" id="cSend">Kirim</button></div></div></div>
 <button class="bstart pgo" id="pGo">MULAI!</button></div></div>
 <div id="modeP" class="scr hide"><div class="pc k"><div class="ph"><svg class="ic"><use href="#i-flag"/></svg><h3>Pilih Mode</h3><button class="x" data-close="modeP"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pb"><div class="mps"><button class="mk " data-m="rank"><span class="mi"><svg class="ic"><use href="#i-crown"/></svg></span>Ranked<small>Naik tier, jadi juara</small></button><button class="mk " data-m="classic"><span class="mi"><svg class="ic"><use href="#i-flag"/></svg></span>Classic<small>Pilih lintasan sendiri</small></button><button class="mk" data-m="tour" id="mkTour"><span class="mi"><svg class="ic"><use href="#i-medal"/></svg></span>Turnamen<small id="tourSm"></small></button></div></div></div></div>
-<div id="onlP" class="scr hide"><div class="pc s"><div class="ph"><svg class="ic"><use href="#i-user"/></svg><h3>Mabar Online</h3><button class="x" id="onlX"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pb"><button class="csend" id="onlNew" style="width:100%">Buat Room</button><div class="lb">Atau masukkan kode room teman</div><div class="cr rdr"><input id="onlIn" maxlength="5" placeholder="KODE" autocomplete="off" style="text-transform:uppercase"><button class="csend" id="onlJoin">Gabung</button></div><div class="lb" id="onlMsg"></div></div></div></div>
+<div id="onlP" class="scr hide"><div class="pc s"><div class="ph"><svg class="ic"><use href="#i-user"/></svg><h3>Mabar Online</h3><button class="x" id="onlX"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pb"><div class="cr rdr"><input id="onlPw" maxlength="16" placeholder="Kata sandi (opsional)" autocomplete="off"><button class="csend" id="onlNew">Buat Room</button></div><div class="lb">Room yang sedang dibuka. Ketuk untuk masuk</div><div id="rlL"></div><div class="lb" id="onlMsg"></div></div></div></div>
 <div id="invP" class="scr hide"><div class="pc s"><div class="ph"><svg class="ic"><use href="#i-mail"/></svg><h3>Undangan Balap</h3></div><div class="pb"><div class="ivr"><div class="fav big" id="ivAv"></div><div><div class="ivn" id="ivN"></div><div class="ivs">mengundangmu bermain</div><div class="chip" id="ivM"></div></div></div><div class="ivb"><button class="bt2 r" id="ivNo">Tolak</button><button class="bt2 g" id="ivYes">Terima</button></div></div></div></div>
 <div id="redP" class="scr hide"><div class="pc s"><div class="ph"><svg class="ic"><use href="#i-gift"/></svg><h3>Kode Redeem</h3><button class="x" data-close="redP"><svg class="ic"><use href="#i-x"/></svg></button></div>
  <div class="pb"><div class="lb" style="margin-top:0">Masukkan kode hadiah</div><div class="cr rdr"><input id="rIn" maxlength="20" placeholder="KODE-ANDA" autocomplete="off"><button class="csend" id="rGo">Tukar</button></div><div class="hint" id="rMsg">Kode hanya bisa dipakai 1x per akun.</div></div></div></div>
@@ -1460,7 +1461,7 @@ async function invite(f){
  if(inP(f)){toast(f.n+' sudah ada di lobimu');return}
  if(party.length>=6){toast('Lobi penuh (6/6)');return}
  if(!mode){toast('Pilih mode dulu sebelum mengundang');return}
- try{if(!RC)await onlEnter(rid(),1);
+ try{if(!RC)await onlEnter(rid(),1,0,1);
   await X.db.ref('inv/'+f.id+'/'+pid).set({n:pname,c:RC,m:mode,t:Date.now()+svOff});
   f.sent=1;renderFriends();toast('Undangan Mode '+MD[mode]+' dikirim ke '+f.n);setTimeout(()=>{f.sent=0;renderFriends()},20000)}
  catch(e){RC=RC&&!window.__inRoom?null:RC;toast('Gagal mengirim undangan')}}
@@ -1517,11 +1518,11 @@ function addBot(lv){if(!amHost()){toast('Hanya host yang bisa menambah bot');ret
  party.push({id:'BOT'+(++botN)+Math.floor(Math.random()*900+100),name:nm,h:Math.floor(Math.random()*340)+10,rk:[0,4,8,12][lv],bot:1,lv,ready:1});
  show('botP',0);sysMsg(nm+' ('+BLV[lv].n+') ditambahkan');renderParty()}
 $('pBot').onclick=()=>{if(!amHost())return;if(!botOk()){toast('Bot tidak tersedia di mode '+MD[mode]+'. Khusus pemain asli');return}if(party.length>=6){toast('Lobi penuh (6/6)');return}renderBots();show('botP',1)};
-/* ===== Mode Turnamen: buka jam 13.00-16.00, biaya 50 coin, 5 ronde di 5 map (bukan ranked), juara = menang ronde terbanyak ===== */
+/* ===== Mode Turnamen: buka 24 jam, biaya 50 coin, 5 ronde di 5 map (bukan ranked), juara = menang ronde terbanyak ===== */
 const TOUR={fee:50,prize:[310,180,120],rounds:5,h0:13,h1:16,laps:2};
-const tourOpen=()=>{const h=new Date().getHours();return h>=TOUR.h0&&h<TOUR.h1};
+const tourOpen=()=>true; /* turnamen buka 24 jam */
 function tourWait(){const n=new Date(),t=new Date(n);t.setHours(TOUR.h0,0,0,0);if(n>=t)t.setDate(t.getDate()+1);const m=Math.ceil((t-n)/60000),h=Math.floor(m/60);return(h?h+' jam ':'')+(m%60)+' menit'}
-function tourSync(){const o=tourOpen();$('mkTour').classList.toggle('lk',!o);$('tourSm').textContent=o?'Buka sampai 16.00 \u00b7 Biaya '+TOUR.fee+' coin':'Tutup \u00b7 buka lagi dalam '+tourWait()}
+function tourSync(){const o=tourOpen();$('mkTour').classList.toggle('lk',!o);$('tourSm').textContent=o?'Buka 24 jam \u00b7 Biaya '+TOUR.fee+' coin':'Tutup \u00b7 buka lagi dalam '+tourWait()}
 setInterval(tourSync,20000);tourSync();
 function tourStart(){
  if(!tourOpen()){toast('Turnamen sudah tutup. Buka lagi dalam '+tourWait());show('party',1);return}
@@ -1750,9 +1751,9 @@ function loop(now){
 const X=window.__fb||{};let RC=null,rRef=null,sRef=null,RS={},RB={},sq=0,sT=0,lastGo=null,onlGoing=0,svOff=0,offOn=0,evQ=null,tseq=0,ONSD=0,INB={},RSTM=0;
 const rid=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let t="";for(let i=0;i<5;i++)t+=a[Math.random()*a.length|0];return t};
 const omsg=t=>{$("onlMsg").textContent=t||""};
-let PW={},INV={},invCode="";
+let PW={},INV={},invCode="",RLH=0,rlRef=null,RLC0=-1,RLW=null,RLC={};
 const SVT=()=>firebase.database.ServerValue.TIMESTAMP;
-function presSet(){try{if(X.db&&X.uid)X.db.ref("presence/"+pid).update({t:SVT(),n:pname,rm:RC||""})}catch(e){}}
+function presSet(){try{if(X.db&&X.uid)X.db.ref("presence/"+pid).update({t:SVT(),n:pname,rm:RC||""});if(RLH&&rlRef)rlRef.update({t:SVT()})}catch(e){}}
 /* online = node presence ada (otomatis terhapus saat putus lewat onDisconnect); t hanya untuk membuang data basi (>3 menit) */
 function presOn(v){if(!v)return false;if(!v.t)return true;const d=Date.now()+svOff-v.t;return d<180000}
 function presFx(f){const on=presOn(f.pv)?1:0,rm=on&&f.pv&&f.pv.rm?f.pv.rm:"";if((f.on|0)!==on||(f.rm||"")!==rm){f.on=on;f.rm=rm;renderFriends()}}
@@ -1788,8 +1789,20 @@ function evApply(e){if(state==="menu")return;
  else if(e.k==="x"){const i=traps.findIndex(t=>t.id===e.id);if(i>=0){itG.remove(traps[i].m);traps.splice(i,1)}}
  else if(e.k==="s"){const b=cars.find(c=>c.uid===e.to);if(b){mkShot(car,b);if(b===me)msgT("Awas tembakan!",700)}}}
 /* pesan masuk: permintaan teman */
-function inbBadge(){const n=Object.keys(INB).length,b=document.querySelector("#bMsg .bdg");if(b)b.style.display=n?"block":"none"}
-function renderInbox(){const L=$("msgL");if(!L)return;L.innerHTML="";const ks=Object.keys(INB);$("msgE").style.display=ks.length?"none":"block";
+const GIFTS=[{id:"g100a",t:"Hadiah gratis 100 coin",d:"Untuk semua pemain. Ketuk Klaim!",coin:100}];
+function giftsDone(){try{const a=JSON.parse(localStorage.getItem("bt_gifts")||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}}
+const giftsPending=()=>{const d=giftsDone();return GIFTS.filter(g=>!d.includes(g.id))};
+function giftMark(id){const d=giftsDone();if(!d.includes(id)){d.push(id);try{localStorage.setItem("bt_gifts",JSON.stringify(d))}catch(e){}}}
+async function giftClaim(g,btn){if(!X.db||!X.uid){toast("Butuh login online untuk klaim hadiah");return}if(btn)btn.disabled=true;
+ try{const r=await X.db.ref("claims/"+pid+"/"+g.id).transaction(v=>v?undefined:Date.now());
+  if(r.committed){COIN+=g.coin;setCur();toast("+"+g.coin+" coin! Hadiah berhasil diklaim");beep(880,.2,"triangle",.08)}else toast("Hadiah ini sudah pernah diklaim");
+  giftMark(g.id)}catch(e){toast("Gagal klaim, coba lagi");if(btn)btn.disabled=false;return}
+ renderInbox();inbBadge()}
+function inbBadge(){const n=Object.keys(INB).length+giftsPending().length,b=document.querySelector("#bMsg .bdg");if(b)b.style.display=n?"block":"none"}
+function renderInbox(){const L=$("msgL");if(!L)return;L.innerHTML="";const ks=Object.keys(INB),gp=giftsPending();$("msgE").style.display=ks.length||gp.length?"none":"block";
+ gp.forEach(g=>{const d=document.createElement("div");d.className="mrow";
+  d.innerHTML='<div class="fav" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#ffd24a,#f09a1a)"><svg class="ic" style="width:60%;height:60%"><use href="#i-gift"/></svg></div><div class="mt"><b>'+esc(g.t)+'</b><small>'+esc(g.d)+'</small></div>';
+  const b=document.createElement("button");b.className="sm";b.textContent="Klaim "+g.coin;b.onclick=()=>giftClaim(g,b);d.appendChild(b);L.appendChild(d)});
  ks.forEach(k=>{const r=INB[k],d=document.createElement("div");d.className="mrow";
   d.innerHTML='<div class="fav"></div><div class="mt"><b>'+esc(r.n||("Pemain "+k))+'</b><small>ingin berteman denganmu \u00b7 ID '+esc(k)+'</small></div>';
   d.firstChild.appendChild(avatar((parseInt(k)*47)%340));
@@ -1807,24 +1820,25 @@ function inboxInit(){if(!X.db||!X.uid)return;
  X.db.ref("acc/"+pid).on("value",q=>{const v=q.val()||{};let ch=0;for(const k in v){const f=FR.find(x=>String(x.id)===String(k));
   if(f){f.pend=0;f.n=v[k].n||f.n}else FR.push({id:k,n:v[k].n||("Pemain "+k),h:(parseInt(k)*47)%340,on:0,pend:0,rk:0});
   ch=1;toast((v[k].n||k)+" menerima permintaan pertemananmu");X.db.ref("acc/"+pid+"/"+k).remove()}if(ch){saveFR();renderFriends()}});
- FR.filter(f=>f.pend).forEach(f=>X.db.ref("req/"+f.id+"/"+pid).set({n:pname,t:Date.now()}).catch(()=>{}))}
-async function onlEnter(code,host){
+ FR.filter(f=>f.pend).forEach(f=>X.db.ref("req/"+f.id+"/"+pid).set({n:pname,t:Date.now()}).catch(()=>{}));
+ setTimeout(()=>{if(giftsPending().length)toast("Ada hadiah 100 coin di menu Pesan!")},3000)}
+async function onlEnter(code,host,pwh,ul){
  const u=X.uid();RC=code;lastGo=null;RS={};RB={};rRef=X.db.ref("rooms/"+code);sRef=rRef.child("s");
- if(host){await rRef.set({h:u,t:Date.now()})}window.__inRoom=1;
+ if(host){await rRef.set({h:u,t:Date.now(),pw:pwh||0,ul:ul?1:0})}window.__inRoom=1;
  const m=rRef.child("p/"+u);m.onDisconnect().remove();sRef.child(u).onDisconnect().remove();
  await m.set({id:pid,name:pname,rk:RKS.lv|0,r:0,sk:skin,ci:colorIdx});
  if(host){if(!mode)mode="classic";syncMode();rRef.child("md").set(mode)}rdy=0;
  if(!offOn){offOn=1;try{X.db.ref(".info/serverTimeOffset").on("value",o=>{svOff=+o.val()||0})}catch(e){}}
  const rbk=q=>{if(q.key!==X.uid())rbIn(q.key,q.val())};sRef.on("child_added",rbk);sRef.on("child_changed",rbk);sRef.on("child_removed",q=>{delete RB[q.key]});rRef.on("value",onlSnap);evQ=rRef.child("ev").limitToLast(60);evQ.on("child_added",evGot);
- show("onlP",0);show("lobby",0);show("party",1);sysMsg("Kode room: "+code);toast("Kode room: "+code);presSet()}
-function onlLeave(closed){if(!RC)return;const u=X.uid(),h=amHost(),oth=party.filter(m=>!m.me&&m.uid);rRef.off();sRef.off();if(evQ){evQ.off();evQ=null}window.__inRoom=0;RSTM=0;
+ show("onlP",0);rlClose();show("lobby",0);show("party",1);sysMsg(host?"Room dibuat. Pemain lain bisa masuk lewat daftar room":"Berhasil masuk room");toast(host?"Room dibuat":"Berhasil masuk room");presSet()}
+function onlLeave(closed){if(!RC)return;const u=X.uid(),h=amHost(),oth=party.filter(m=>!m.me&&m.uid);rRef.off();sRef.off();if(evQ){evQ.off();evQ=null}window.__inRoom=0;RSTM=0;if(RLH){try{rlRef.onDisconnect().cancel();if(h&&!oth.length)rlRef.remove()}catch(e){}RLH=0;RLC0=-1}
  if(!closed){try{sRef.child(u).remove();if(h&&oth.length)rRef.child("h").set(oth[0].uid);if(h&&!oth.length)rRef.remove();else rRef.child("p/"+u).remove()}catch(e){}}
  RC=null;RS={};presSet();party=[meM(1)];chat=[];rdy=0;show("party",0);show("lobby",1);renderParty();if(closed)toast("Room ditutup oleh host")}
 function onlSnap(q){const v=q.val();if(!v){onlLeave(1);return}
  const u=X.uid(),p=v.p||{};if(!p[u])return;if(!p[v.h]&&Object.keys(p).sort()[0]===u)rRef.child("h").set(u);
  const ks=Object.keys(p).sort((a,b)=>a===v.h?-1:b===v.h?1:a<b?-1:1);
  party=ks.map(k=>({uid:k,id:p[k].id,name:p[k].name,h:(parseInt(p[k].id)*47)%340,rk:p[k].rk|0,sk:p[k].sk||"std",ci:p[k].ci|0,me:k===u?1:0,host:k===v.h?1:0,ready:p[k].r?1:0}));
- rdy=p[u].r?1:0;if(!amHost()&&v.md&&v.md!==mode){mode=v.md;syncMode()}
+ rdy=p[u].r?1:0;try{rlSync(v,ks.length)}catch(e){}if(!amHost()&&v.md&&v.md!==mode){mode=v.md;syncMode()}
  if(lastGo===null)lastGo=v.go||0;
  else if(v.go&&v.go!==lastGo){lastGo=v.go;ONSD=v.sd|0;rdy=0;rRef.child("p/"+u+"/r").set(0);sRef.child(u).remove();RB={};
   if(v.tn&&v.tn.maps){const mj=v.tn.maps.join();if(!TN||TN.maps.join()!==mj){if(!amHost()&&!(v.tn.round>0)){COIN=Math.max(0,COIN-TOUR.fee);setCur()}TN={maps:v.tn.maps.slice(),round:v.tn.round|0,res:[],info:[]}}else TN.round=v.tn.round|0}else if(TN&&mode!=="tour")TN=null;
@@ -1872,11 +1886,29 @@ function rmStep(c,dt){const b=RB[c.uid],now=performance.now();
  if(z.f&&!c.fin&&(state==="race"||state==="done")&&raceT>2){c.fin=true;c.ft=z.ft||raceT}}
 function onlTick(dt){if(!RC||state==="menu"||state==="paused")return;sT+=dt;if(sT<.033)return;sT=0;
  sRef.child(X.uid()).set({q:++sq,T:+performance.now().toFixed(1),l:+(me.latV||0).toFixed(1),s:+me.s.toFixed(2),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),x:me.cr?1:0,sa:+(me.spinA||0).toFixed(2),fp:+(me.flip||0).toFixed(2),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
-$("bOnl").onclick=()=>{if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){show("lobby",0);show("party",1);renderParty();return}omsg("");show("onlP",1)};
-$("onlX").onclick=()=>show("onlP",0);
-$("onlNew").onclick=async()=>{try{omsg("Membuat room...");await onlEnter(rid(),1)}catch(e){RC=null;omsg("Gagal: "+(e.code||e.message))}};
-$("onlJoin").onclick=async()=>{const c=$("onlIn").value.trim().toUpperCase();if(c.length<5){omsg("Kode room 5 karakter");return}
- try{const v=(await X.db.ref("rooms/"+c).get()).val();if(!v){omsg("Room tidak ditemukan");return}if(Object.keys(v.p||{}).length>=6){omsg("Room penuh (6/6)");return}await onlEnter(c,0)}catch(e){RC=null;omsg("Gagal: "+(e.code||e.message))}};
+$("bOnl").onclick=()=>{if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){show("lobby",0);show("party",1);renderParty();return}omsg("");show("onlP",1);rlOpen()};
+$("onlX").onclick=()=>{rlClose();show("onlP",0)};
+const pwHash=(pw,code)=>{const t=code+":"+pw;let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
+/* ROOM SERVER: daftar room publik di rl/<kode> (pembuat, jumlah pemain, sandi). Host yang menulis; hilang otomatis saat host putus */
+function rlSync(v,cnt){if(!X.db||!RC||v.ul||!amHost())return;const r=X.db.ref("rl/"+RC);
+ if(!RLH){RLH=1;rlRef=r;RLC0=cnt;r.set({n:pname,i:pid,c:cnt,pw:v.pw||0,t:SVT()});r.onDisconnect().remove();return}
+ if(cnt!==RLC0){RLC0=cnt;r.update({c:cnt,t:SVT()})}}
+function rlOpen(){if(!X.db||RLW)return;RLW=X.db.ref("rl");RLW.on("value",s=>{RLC=s.val()||{};renderRL()},e=>{omsg("Daftar room gagal dimuat (cek Rules database)")})}
+function rlClose(){if(RLW){try{RLW.off()}catch(e){}RLW=null}}
+function renderRL(){const L=$("rlL");if(!L)return;const now=Date.now()+svOff,a=[];
+ for(const c in RLC){const e=RLC[c];if(!e||!e.t||now-e.t>600000)continue;a.push([c,e])}
+ a.sort((x,y)=>((x[1].c|0)>=6)-((y[1].c|0)>=6)||(y[1].t-x[1].t));
+ L.innerHTML="";if(!a.length){L.innerHTML='<div class="hint">Belum ada room. Buat room pertama!</div>';return}
+ a.forEach(([c,e])=>{const n=e.c|0,full=n>=6,d=document.createElement("div");d.className="mrow rlr"+(full?" full":"");
+  d.innerHTML='<div class="fav"></div><div class="mt"><b>'+esc(e.n||"Pemain")+'</b><small>'+n+'/6 pemain'+(e.pw?' \u00b7 <svg class="ic" style="width:1.1em;height:1.1em;vertical-align:-.15em"><use href="#i-lock"/></svg> Pakai sandi':'')+'</small></div>';
+  d.firstChild.appendChild(avatar((parseInt(e.i)*47)%340||0));
+  const b=document.createElement("button");b.className="sm";b.textContent=full?"Penuh":"Masuk";b.onclick=ev=>{ev.stopPropagation();if(!full)rlJoin(c,e)};d.onclick=()=>{if(!full)rlJoin(c,e)};d.appendChild(b);L.appendChild(d)})}
+async function rlJoin(code,e){if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){omsg("Kamu masih ada di room lain");return}
+ try{if(e&&e.pw){const pw=prompt("Room ini pakai kata sandi. Masukkan kata sandi:");if(pw===null)return;if(pwHash(pw.trim(),code)!==e.pw){omsg("Kata sandi salah");toast("Kata sandi salah");return}}
+  omsg("Masuk...");const h=(await X.db.ref("rooms/"+code+"/h").get()).val();if(!h){omsg("Room sudah ditutup");return}
+  const ps=(await X.db.ref("rooms/"+code+"/p").get()).val()||{};if(Object.keys(ps).length>=6){omsg("Room penuh (6/6)");return}
+  await onlEnter(code,0)}catch(err){RC=null;omsg("Gagal: "+(err.code||err.message))}}
+$("onlNew").onclick=async()=>{try{omsg("Membuat room...");const pw=$("onlPw").value.trim(),code=rid();await onlEnter(code,1,pw?pwHash(pw,code):0,0);$("onlPw").value=""}catch(e){RC=null;omsg("Gagal: "+(e.code||e.message))}};
 {const pl=$("pLeave").onclick;$("pLeave").onclick=()=>{if(RC){onlLeave();return}pl()}}
 inboxInit();presInit();invInit();buildMap(0);resetCars();updBest();layout();requestAnimationFrame(loop);
 };

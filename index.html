@@ -1263,8 +1263,13 @@ function stepCars(dt){
   c.bst=bst;
  }
  if(shots.length)shotsUpd(dt);
- for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++){const a=cars[i],b=cars[j];if(a.fin||b.fin||a.cr||b.cr)continue;const ds=wd(b.s-a.s),dd=b.d-a.d;
-  if(Math.abs(ds)<4.3&&Math.abs(dd)<2.1&&Math.abs(frame(a.s).y-frame(b.s).y)<6){const pu=(2.1-Math.abs(dd))*.5*(dd>=0?1:-1)||.5;a.d-=pu;b.d+=pu;
+ for(let i=0;i<cars.length;i++)for(let j=i+1;j<cars.length;j++){const a=cars[i],b=cars[j];if(a.fin||b.fin||a.cr||b.cr)continue;if(a.rm&&b.rm)continue;const ds=wd(b.s-a.s),dd=b.d-a.d,RM=a.rm||b.rm;
+  if(Math.abs(ds)<(RM?4.7:4.3)&&Math.abs(dd)<(RM?2.3:2.1)&&Math.abs(frame(a.s).y-frame(b.s).y)<6){
+   if(RM){const l=a.rm?b:a,g=a.rm?a:b,sg=g.d>=l.d?1:-1,pu=(2.3-Math.abs(g.d-l.d))*sg;
+    l.d-=pu*Math.min(1,dt*20);l.latV=Math.max(-24,Math.min(24,l.latV-sg*90*dt));
+    if(wd(g.s-l.s)>0)l.v=Math.min(l.v,g.v*.99);
+    if(l===me)shake=Math.max(shake,.3);continue}
+   const pu=(2.1-Math.abs(dd))*.5*(dd>=0?1:-1)||.5;a.d-=pu;b.d+=pu;
    const rear=ds>0?a:b,front=ds>0?b:a;rear.v=Math.min(rear.v,front.v*.99);
    if(a===me||b===me)shake=Math.max(shake,.3)}}
  for(const c of cars){place(c);const fl=c.m.userData.fl;fl.visible=!!c.bst;if(c.bst)fl.scale.set(1,1,.7+Math.random()*.7);const gl=c.m.userData.glow;if(gl){const K=c.m.userData.gk,k=c.bst?1:.6+.35*Math.sin(performance.now()*.006);gl.color.setRGB(k*K[0],k*K[1],k*K[2])}}
@@ -1319,7 +1324,7 @@ document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{show(b.datas
 $('bBack').onclick=()=>{show('menu',0);show('party',1);renderParty()};
 $('bSpin').onclick=()=>toast('Spin segera hadir');
 $('bInv').onclick=()=>toast('Inventory segera hadir');
-$('bMsg').onclick=()=>toast('Pesan segera hadir');
+$('bMsg').onclick=()=>$('frAdd').onclick();$('frAdd').style.display='none';
 $('bRank').onclick=()=>{rkBoard(rkTab);show('rankP',1)};
 $('bSet').onclick=()=>{syncSet();show('setP',1)};
 $('tSnd').onclick=()=>{$('bMute').click();syncSet()};
@@ -1678,16 +1683,17 @@ function loop(now){
  if(!(pvOn||shOn))renderer.render(scene,cam);
 }
 /* ===== MABAR ONLINE: room berkode + sinkron mobil ===== */
-const X=window.__fb||{};let RC=null,rRef=null,sRef=null,RS={},sT=0,lastGo=null,onlGoing=0;
+const X=window.__fb||{};let RC=null,rRef=null,sRef=null,RS={},RB={},sq=0,sT=0,lastGo=null,onlGoing=0,svOff=0,offOn=0;
 const rid=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let t="";for(let i=0;i<5;i++)t+=a[Math.random()*a.length|0];return t};
 const omsg=t=>{$("onlMsg").textContent=t||""};
 async function onlEnter(code,host){
- const u=X.uid();RC=code;lastGo=null;RS={};rRef=X.db.ref("rooms/"+code);sRef=rRef.child("s");
+ const u=X.uid();RC=code;lastGo=null;RS={};RB={};rRef=X.db.ref("rooms/"+code);sRef=rRef.child("s");
  if(host){await rRef.set({h:u,t:Date.now()});rRef.onDisconnect().remove()}
  const m=rRef.child("p/"+u);m.onDisconnect().remove();sRef.child(u).onDisconnect().remove();
- await m.set({id:pid,name:pname,rk:RKS.lv|0,r:0});
+ await m.set({id:pid,name:pname,rk:RKS.lv|0,r:0,sk:skin,ci:colorIdx});
  mode="classic";syncMode();rdy=0;
- sRef.on("value",q=>{RS=q.val()||{}});rRef.on("value",onlSnap);
+ if(!offOn){offOn=1;try{X.db.ref(".info/serverTimeOffset").on("value",o=>{svOff=+o.val()||0})}catch(e){}}
+ sRef.on("value",q=>{const v=q.val()||{};RS=v;for(const k in v){const r=v[k],o=RB[k];if(!o||o.q!==r.q)RB[k]={q:r.q,T:r.T||0,s:r.s,d:r.d,v:r.v,l:r.l,y:r.y,a:r.a,b:r.b,f:r.f,ft:r.ft,rt:performance.now()}}for(const k in RB)if(!v[k])delete RB[k]});rRef.on("value",onlSnap);
  show("onlP",0);show("lobby",0);show("party",1);sysMsg("Kode room: "+code);toast("Kode room: "+code)}
 function onlLeave(closed){if(!RC)return;const u=X.uid(),h=amHost();rRef.off();sRef.off();
  if(!closed){try{sRef.child(u).remove();if(h)rRef.remove();else rRef.child("p/"+u).remove()}catch(e){}}
@@ -1695,24 +1701,36 @@ function onlLeave(closed){if(!RC)return;const u=X.uid(),h=amHost();rRef.off();sR
 function onlSnap(q){const v=q.val();if(!v){onlLeave(1);return}
  const u=X.uid(),p=v.p||{};if(!p[u])return;
  const ks=Object.keys(p).sort((a,b)=>a===v.h?-1:b===v.h?1:a<b?-1:1);
- party=ks.map(k=>({uid:k,id:p[k].id,name:p[k].name,h:(parseInt(p[k].id)*47)%340,rk:p[k].rk|0,me:k===u?1:0,host:k===v.h?1:0,ready:p[k].r?1:0}));
+ party=ks.map(k=>({uid:k,id:p[k].id,name:p[k].name,h:(parseInt(p[k].id)*47)%340,rk:p[k].rk|0,sk:p[k].sk||"std",ci:p[k].ci|0,me:k===u?1:0,host:k===v.h?1:0,ready:p[k].r?1:0}));
  rdy=p[u].r?1:0;if(mode!=="classic"){mode="classic";syncMode()}
  if(lastGo===null)lastGo=v.go||0;
- else if(v.go&&v.go!==lastGo){lastGo=v.go;rdy=0;rRef.child("p/"+u+"/r").set(0);sRef.child(u).remove();
+ else if(v.go&&v.go!==lastGo){lastGo=v.go;rdy=0;rRef.child("p/"+u+"/r").set(0);sRef.child(u).remove();RB={};
   if(v.m!=null)buildMap(v.m);lapsN=v.l||2;onlGoing=1;show("party",0);startRace();onlGoing=0;return}
  renderParty();$("pBot").classList.add("hide");$("pLeave").classList.remove("hide")}
 function onlGo(){if(amHost()){if(party.some(m=>!m.host&&!m.ready)){toast("Tunggu semua pemain siap");return}if(party.length<2){toast("Belum ada pemain lain");return}goRace()}
  else rRef.child("p/"+X.uid()+"/r").set(rdy?0:1)}
 function onlLaunch(){if(amHost())rRef.update({go:Date.now(),m:curMap,l:lapsN});else toast("Menunggu host memulai...")}
 function onlCars(){if(!RC||party.length<2)return;const u=X.uid(),o=party.filter(m=>!m.me),ps=party.map(m=>m.uid).sort(),n=ps.length,sp=Math.min(5,16.6/(n-1));
- cars.forEach((c,i)=>{c.uid=i?o[i-1].uid:u;if(i){c.rm=1;c.bot=false}c.d=c.lane=(ps.indexOf(c.uid)-(n-1)/2)*sp})}
-function rmStep(c,dt){const r=RS[c.uid];
- if(!r){c.miss=(c.miss||0)+dt;c.v=0;if(state==="race"&&c.miss>4&&!c.fin){c.fin=true;c.ft=raceT+999}return}
+ cars.forEach((c,i)=>{c.uid=i?o[i-1].uid:u;if(i){c.rm=1;c.bot=false;const q=o[i-1],sk=q.sk&&q.sk!=="std"&&SKINS[q.sk]?SKINS[q.sk]:null,cl=sk?sk.col:cols[q.ci%cols.length],nm=sk?sk.mk():makeCar(cl),old=c.m;
+  scene.remove(old);old.traverse(x=>{if(x.geometry)x.geometry.dispose();if(x.isSprite){x.material.map.dispose();x.material.dispose()}});
+  c.col=cl;scene.add(nm);c.m=nm;const t=nameTag(c);nm.add(t);nm.userData.tag=t}c.d=c.lane=(ps.indexOf(c.uid)-(n-1)/2)*sp})}
+function rmStep(c,dt){const z=RB[c.uid];
+ if(!z){c.miss=(c.miss||0)+dt;c.v=0;if(state==="race"&&c.miss>4&&!c.fin){c.fin=true;c.ft=raceT+999}return}
  c.miss=0;if(state==="count"){c.v=0;return}
- c.v=r.v||0;c.s+=c.v*dt;c.s+=((r.s||0)-c.s)*Math.min(1,dt*6);c.d+=((r.d||0)-c.d)*Math.min(1,dt*10);
- c.y=r.y||0;c.air=!!r.a;c.bst=!!r.b;if(r.f&&!c.fin&&state==="race"&&raceT>2){c.fin=true;c.ft=r.ft||raceT}}
-function onlTick(dt){if(!RC||state==="menu"||state==="paused")return;sT+=dt;if(sT<.1)return;sT=0;
- sRef.child(X.uid()).set({s:+me.s.toFixed(1),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
+ /* umur sampel: pakai jam server supaya jitter jaringan tidak bikin mobil maju-mundur */
+ let age=z.T?(Date.now()+svOff-z.T)/1000:(performance.now()-z.rt)/1000;
+ age=Math.max(0,Math.min(.35,age));
+ const v0=z.v||0,l0=z.l||0,live=age<.34;
+ /* posisi prediksi = posisi terakhir + kecepatan x umur -> mobil teman tampil di posisi "sekarang", jadi tabrakan nyambung */
+ const ts=z.s+v0*age;let td=z.d+l0*Math.min(age,.12);
+ const lim=W+Math.max(0,ghAt(ts))-1.1;if(td>lim)td=lim;else if(td<-lim)td=-lim;
+ if(Math.abs(ts-c.s)>50)c.s=ts;
+ else c.s+=(live?v0*dt:0)+(ts-c.s)*Math.min(1,dt*10); /* feed-forward + koreksi halus: tidak pernah ketinggalan, tidak melompat mundur */
+ c.d+=(age<.15?l0*dt:0)+(td-c.d)*Math.min(1,dt*12);
+ c.v=v0;c.y+=((z.y||0)-c.y)*Math.min(1,dt*18);c.air=!!z.a;c.bst=!!z.b;
+ if(z.f&&!c.fin&&state==="race"&&raceT>2){c.fin=true;c.ft=z.ft||raceT}}
+function onlTick(dt){if(!RC||state==="menu"||state==="paused")return;sT+=dt;if(sT<.033)return;sT=0;
+ sRef.child(X.uid()).set({q:++sq,T:Date.now()+svOff,l:+(me.latV||0).toFixed(1),s:+me.s.toFixed(2),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
 $("bOnl").onclick=()=>{if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){show("lobby",0);show("party",1);renderParty();return}omsg("");show("onlP",1)};
 $("onlX").onclick=()=>show("onlP",0);
 $("onlNew").onclick=async()=>{try{omsg("Membuat room...");await onlEnter(rid(),1)}catch(e){RC=null;omsg("Gagal: "+(e.code||e.message))}};

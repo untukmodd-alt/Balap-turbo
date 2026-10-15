@@ -456,7 +456,7 @@ button{transition:transform .08s,filter .15s,box-shadow .12s}
  </div></div></div>
 <div id="skP" class="scr hide"><div class="pc k"><div class="ph"><svg class="ic"><use href="#i-car"/></svg><h3>Skin Mobil</h3><button class="x" data-close="skP"><svg class="ic"><use href="#i-x"/></svg></button></div>
  <div class="pb"><div class="skg" id="skG"></div><div class="hint">Beli skin baru di Toko.</div></div></div></div>
-<div id="party" class="scr hide"><div class="pty"><div class="pth"><svg class="ic"><use href="#i-user"/></svg><h3>Lobi</h3><span class="pcnt" id="pCnt"></span><button class="pmode" id="pMode"></button><button class="pmode hide" id="pBot">+ Bot</button><button class="plv hide" id="pLeave">Keluar</button><button class="x" id="pBack"><svg class="ic"><use href="#i-x"/></svg></button></div>
+<div id="party" class="scr hide"><div class="pty"><div class="pth"><svg class="ic"><use href="#i-user"/></svg><h3>Lobi</h3><span class="pcnt" id="pCnt"></span><button class="pmode" id="pMode"></button><button class="pmode hide" id="pBot">+ Bot</button><button class="plv hide" id="pLeave">Keluar Lobi</button><button class="x" id="pBack"><svg class="ic"><use href="#i-x"/></svg></button></div>
 <div class="ptb"><div class="pgrid" id="pGrid"></div><div class="pchat"><div class="cl" id="cL"></div><div class="cr"><input id="cIn" maxlength="60" placeholder="Ketik pesan..." autocomplete="off"><button class="csend" id="cSend">Kirim</button></div></div></div>
 <button class="bstart pgo" id="pGo">MULAI!</button></div></div>
 <div id="modeP" class="scr hide"><div class="pc k"><div class="ph"><svg class="ic"><use href="#i-flag"/></svg><h3>Pilih Mode</h3><button class="x" data-close="modeP"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="pb"><div class="mps"><button class="mk " data-m="rank"><span class="mi"><svg class="ic"><use href="#i-crown"/></svg></span>Ranked<small>Naik tier, jadi juara</small></button><button class="mk " data-m="classic"><span class="mi"><svg class="ic"><use href="#i-flag"/></svg></span>Classic<small>Pilih lintasan sendiri</small></button><button class="mk" data-m="tour" id="mkTour"><span class="mi"><svg class="ic"><use href="#i-medal"/></svg></span>Turnamen<small id="tourSm"></small></button></div></div></div></div>
@@ -1061,7 +1061,7 @@ for(const [id,fn] of[['bSk',c=>shoot(c)],['bTp',c=>putTrap(c)]])$(id).addEventLi
 const km={ArrowLeft:'l',a:'l',ArrowRight:'r',d:'r',ArrowDown:'b',s:'b',' ':'n',Shift:'n'};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=km[e.key.length>1?e.key:e.key.toLowerCase()];if(k){inp[k]=1;e.preventDefault()}if(e.key==='p'||e.key==='Escape')pause();if(state==='race'&&!me.cr&&!me.fin){if(e.key==='e')shoot(me);if(e.key==='q')putTrap(me)}});
 addEventListener('keyup',e=>{const k=km[e.key.length>1?e.key:e.key.toLowerCase()];if(k)inp[k]=0});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&!RC)pause()});
 
 /* ===== Suara ===== */
 let ac,eo,eg,muted=false;
@@ -1096,7 +1096,7 @@ function toMenu(){state='menu';show('hud',0);show('res',0);show('pause',0);show(
 function pause(){if(state==='count'||state==='race'){prevSt=state;state='paused';show('pause',1)}}
 $('bStart').onclick=startRace;$('bAgain').onclick=()=>{if(mode==='tour'&&TN)tourShow();else startRace()};
 $('bResume').onclick=()=>{state=prevSt;show('pause',0)};
-const qT=()=>{if(TN&&TN.res.length<TOUR.rounds&&!confirm('Keluar dari turnamen? Biaya masuk tidak dikembalikan.'))return;toMenu()};
+const qT=()=>{if(TN&&TN.res.length<TOUR.rounds&&!confirm('Keluar dari turnamen? Biaya masuk tidak dikembalikan.'))return;toMenu();if(window.__inRoom){show('lobby',0);show('party',1);renderParty()}};
 $('bPause').onclick=pause;$('bQuit1').onclick=qT;$('bQuit2').onclick=qT;
 let mT;function msgT(t,ms){const e=$('msg');e.textContent=t;clearTimeout(mT);if(ms)mT=setTimeout(()=>e.textContent='',ms)}
 const cmp=(a,b)=>(b.fin?1e9-b.ft:b.s)-(a.fin?1e9-a.ft:a.s);
@@ -1104,7 +1104,7 @@ function showRes(){
  state='done';endSpecUI();const r=[...cars].sort(cmp),k=r.indexOf(me)+1;recStats(k);
  let nb='';if(me.fin){const b=getBest();if(!b||me.ft<b){setBest(me.ft);nb='Rekor baru di '+MAPS[curMap].n+'!'}else nb='Rekor terbaik: '+fmt(b)}
  $('rt').textContent=k===1?'Juara 1!':'Posisi '+k+' dari '+cars.length;$('rb').textContent=nb;
- $('rl').innerHTML=r.map((c,i)=>'<div class="row'+(c===me?' me':'')+'"><b>'+(i+1)+'</b><span class="dot" style="background:#'+c.col.toString(16).padStart(6,'0')+'"></span><span class="n">'+c.name+'</span><span>'+(c.fin?fmt(c.ft):'Masih balapan')+'</span>'+(c.likes?'<span>♥'+c.likes+'</span>':'')+'</div>').join('');
+ $('rl').innerHTML=r.map((c,i)=>'<div class="row'+(c===me?' me':'')+'"><b>'+(i+1)+'</b><span class="dot" style="background:#'+c.col.toString(16).padStart(6,'0')+'"></span><span class="n">'+c.name+'</span><span>'+(c.fin?(c.dnf?'Keluar':fmt(c.ft)):'Masih balapan')+'</span>'+(c.likes?'<span>♥'+c.likes+'</span>':'')+'</div>').join('');
  show('res',1);
  if(mode==='tour'&&TN)tourRec(r,k);else{$('bAgain').textContent='Balap lagi';const rw=me.fin&&cars.length>1?(COIN_REW[k]||0):0;if(rw)showCoin(k,rw)}
 }
@@ -1265,7 +1265,7 @@ function stepCars(dt){
    if(Math.abs(wd(p.s-c.s))<3.8&&Math.abs(p.d-c.d)<3.4){c.boostT=1.2;c.nit=Math.min(1,c.nit+.15);c.padCd=1.8;
     if(c===me){msgT('Boost!',800);beep(660,.3,'triangle',.1)}}}
   if(racing&&!c.fin&&!c.cr&&MAPS[curMap].rk)rkCar(c,dt);
-  if(!c.fin&&c.s>=lapsN*L){c.fin=true;c.ft=raceT;
+  if(!c.fin&&c.s>=lapsN*L){c.fin=true;c.ft=Math.max(0,raceT-(RC&&c===me?(c.s-lapsN*L)/Math.max(1,c.v):0));
    if(c===me){msgT('Finish!',2400);beep(880,.5,'triangle',.1)}}
   c.bst=bst;
  }
@@ -1432,7 +1432,7 @@ function renderParty(){const g=$('pGrid');g.innerHTML='';const H=amHost(),rk=mod
   g.appendChild(d)}
  $('pCnt').textContent=party.length+'/6';
  $('pMode').innerHTML='<svg class="ic"><use href="#i-'+MI[mode]+'"/></svg>Mode '+MD[mode]+(H?' \u270E':'');
- {const o=party.filter(m=>!m.me&&!m.host);$('pGo').innerHTML=H?'MULAI!'+(o.length?'<small>'+o.filter(m=>m.ready).length+'/'+o.length+' pemain siap</small>':''):rdy?'<svg class="ic"><use href="#i-check"/></svg> SIAP<small>Ketuk untuk batal</small>':'SIAP!'}$('pLeave').classList.toggle('hide',party.length<2);$('pBot').classList.toggle('hide',!H||party.length>=6||!botOk());renderFriends()}
+ {const o=party.filter(m=>!m.me&&!m.host);$('pGo').innerHTML=H?'MULAI!'+(o.length?'<small>'+o.filter(m=>m.ready).length+'/'+o.length+' pemain siap</small>':''):rdy?'<svg class="ic"><use href="#i-check"/></svg> SIAP<small>Ketuk untuk batal</small>':'SIAP!'}$('pLeave').classList.toggle('hide',party.length<2&&!window.__inRoom);$('pBot').classList.toggle('hide',!H||party.length>=6||!botOk());renderFriends()}
 function invite(f){if(!f.on){toast(f.n+' sedang offline');return}if(party.length>=6){toast('Lobi penuh (6/6)');return}
  if(!mode){toast('Pilih mode dulu sebelum mengundang');return}
  f.sent=1;renderFriends();toast('Undangan Mode '+MD[mode]+' dikirim ke '+f.n);
@@ -1532,7 +1532,7 @@ function pickWatch(c){const a=alive();if(!a.length){watch=null;return}watch=c&&a
 function updSpec(force){const a=alive(),sig=a.map(c=>c.i).join()+'|'+(watch?watch.i:-1)+'|'+(watch&&watch.likes||0);if(!force&&sig===specSig)return;specSig=sig;
  if(watch){$('spN').textContent=watch.name;$('spI').textContent='ID: '+watch.id;$('spC').textContent=watch.likes||0;$('spL').classList.toggle('on',!!watch.liked)}
  const L=$('specL');L.innerHTML='';a.forEach(c=>{const b=document.createElement('button');b.className='chp'+(c===watch?' sel':'');b.innerHTML='<i style="background:#'+c.col.toString(16).padStart(6,'0')+'"></i>'+esc(c.name);b.onclick=()=>pickWatch(c);L.appendChild(b)})}
-function specTick(){if(!spec)return;if(alive().length<=1){showRes();return}if(!watch||watch.fin)pickWatch(null);else updSpec(false)}
+function specTick(){if(!spec)return;if(alive().length<(RC?1:2)){showRes();return}if(!watch||watch.fin)pickWatch(null);else updSpec(false)}
 $('spL').onclick=()=>{if(!watch)return;watch.liked=!watch.liked;watch.likes=(watch.likes||0)+(watch.liked?1:-1);if(watch.liked)beep(880,.15,'triangle',.08);updSpec(true)};
 $('spR').onclick=()=>showRes();
 
@@ -1686,10 +1686,10 @@ function loop(now){
   cam.position.set(p.x+Math.cos(orbit)*11,p.y+4,p.z+Math.sin(orbit)*11);cam.lookAt(p.x,p.y+1,p.z);
   if(cam.fov!==62){cam.fov=62;cam.updateProjectionMatrix()}
  }else{
-  if(state==='count'){cdT-=dt;const n=Math.ceil(cdT);
+  if(state==='count'){if(RC&&RSTM)cdT=(RSTM-(Date.now()+svOff))/1000;else cdT-=dt;const n=Math.ceil(cdT);
    if(cdT<=0){state='race';msgT('GO!',900);beep(880,.5,'square',.09)}
    else if(n!==lastCd){lastCd=n;msgT(String(n),0);beep(440,.2,'square',.07)}}
-  else if(state==='race'||state==='done')raceT+=dt;
+  else if(state==='race'||state==='done'){if(RC&&RSTM)raceT=Math.max(0,(Date.now()+svOff-RSTM)/1000);else raceT+=dt}
   {const n=Math.max(1,Math.ceil(dt/.034));for(let k=0;k<n;k++)stepCars(dt/n)}if(state==='race'&&me.fin){if(!spec&&raceT-me.ft>1.4)startSpec();specTick()}tunUpdate(dt);follow(dt);rkTick();hud();onlTick(dt);
  }
  if(eg){eg.gain.value=(muted||state==='menu'||state==='done')?0:.025;eo.frequency.value=50+me.v*2.2+(me.bst?25:0)}
@@ -1697,7 +1697,7 @@ function loop(now){
  if(!(pvOn||shOn))renderer.render(scene,cam);
 }
 /* ===== MABAR ONLINE: room berkode + sinkron mobil ===== */
-const X=window.__fb||{};let RC=null,rRef=null,sRef=null,RS={},RB={},sq=0,sT=0,lastGo=null,onlGoing=0,svOff=0,offOn=0,evQ=null,tseq=0,ONSD=0,INB={};
+const X=window.__fb||{};let RC=null,rRef=null,sRef=null,RS={},RB={},sq=0,sT=0,lastGo=null,onlGoing=0,svOff=0,offOn=0,evQ=null,tseq=0,ONSD=0,INB={},RSTM=0;
 const rid=()=>{const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let t="";for(let i=0;i<5;i++)t+=a[Math.random()*a.length|0];return t};
 const omsg=t=>{$("onlMsg").textContent=t||""};
 function rngS(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -1736,34 +1736,34 @@ function inboxInit(){if(!X.db||!X.uid)return;
  FR.filter(f=>f.pend).forEach(f=>X.db.ref("req/"+f.id+"/"+pid).set({n:pname,t:Date.now()}).catch(()=>{}))}
 async function onlEnter(code,host){
  const u=X.uid();RC=code;lastGo=null;RS={};RB={};rRef=X.db.ref("rooms/"+code);sRef=rRef.child("s");
- if(host){await rRef.set({h:u,t:Date.now()});rRef.onDisconnect().remove()}
+ if(host){await rRef.set({h:u,t:Date.now()})}window.__inRoom=1;
  const m=rRef.child("p/"+u);m.onDisconnect().remove();sRef.child(u).onDisconnect().remove();
  await m.set({id:pid,name:pname,rk:RKS.lv|0,r:0,sk:skin,ci:colorIdx});
  mode="classic";syncMode();rdy=0;
  if(!offOn){offOn=1;try{X.db.ref(".info/serverTimeOffset").on("value",o=>{svOff=+o.val()||0})}catch(e){}}
  sRef.on("value",q=>{const v=q.val()||{};RS=v;for(const k in v){const r=v[k],o=RB[k];if(!o||o.q!==r.q)RB[k]={q:r.q,T:r.T||0,s:r.s,d:r.d,v:r.v,l:r.l,y:r.y,a:r.a,b:r.b,f:r.f,ft:r.ft,x:r.x,sa:r.sa,fp:r.fp,rt:performance.now()}}for(const k in RB)if(!v[k])delete RB[k]});rRef.on("value",onlSnap);evQ=rRef.child("ev").limitToLast(60);evQ.on("child_added",evGot);
  show("onlP",0);show("lobby",0);show("party",1);sysMsg("Kode room: "+code);toast("Kode room: "+code)}
-function onlLeave(closed){if(!RC)return;const u=X.uid(),h=amHost();rRef.off();sRef.off();if(evQ){evQ.off();evQ=null}
- if(!closed){try{sRef.child(u).remove();if(h)rRef.remove();else rRef.child("p/"+u).remove()}catch(e){}}
+function onlLeave(closed){if(!RC)return;const u=X.uid(),h=amHost(),oth=party.filter(m=>!m.me&&m.uid);rRef.off();sRef.off();if(evQ){evQ.off();evQ=null}window.__inRoom=0;RSTM=0;
+ if(!closed){try{sRef.child(u).remove();if(h&&oth.length)rRef.child("h").set(oth[0].uid);if(h&&!oth.length)rRef.remove();else rRef.child("p/"+u).remove()}catch(e){}}
  RC=null;RS={};party=[meM(1)];chat=[];rdy=0;show("party",0);show("lobby",1);renderParty();if(closed)toast("Room ditutup oleh host")}
 function onlSnap(q){const v=q.val();if(!v){onlLeave(1);return}
- const u=X.uid(),p=v.p||{};if(!p[u])return;
+ const u=X.uid(),p=v.p||{};if(!p[u])return;if(!p[v.h]&&Object.keys(p).sort()[0]===u)rRef.child("h").set(u);
  const ks=Object.keys(p).sort((a,b)=>a===v.h?-1:b===v.h?1:a<b?-1:1);
  party=ks.map(k=>({uid:k,id:p[k].id,name:p[k].name,h:(parseInt(p[k].id)*47)%340,rk:p[k].rk|0,sk:p[k].sk||"std",ci:p[k].ci|0,me:k===u?1:0,host:k===v.h?1:0,ready:p[k].r?1:0}));
  rdy=p[u].r?1:0;if(mode!=="classic"){mode="classic";syncMode()}
  if(lastGo===null)lastGo=v.go||0;
  else if(v.go&&v.go!==lastGo){lastGo=v.go;ONSD=v.sd|0;rdy=0;rRef.child("p/"+u+"/r").set(0);sRef.child(u).remove();RB={};
-  if(v.m!=null)buildMap(v.m);lapsN=v.l||2;onlGoing=1;show("party",0);startRace();onlGoing=0;return}
+  if(v.m!=null)buildMap(v.m);lapsN=v.l||2;onlGoing=1;show("party",0);startRace();RSTM=v.go+3500;cdT=Math.max(.3,(RSTM-(Date.now()+svOff))/1000);onlGoing=0;return}
  renderParty();$("pBot").classList.add("hide");$("pLeave").classList.remove("hide")}
 function onlGo(){if(amHost()){if(party.some(m=>!m.host&&!m.ready)){toast("Tunggu semua pemain siap");return}if(party.length<2){toast("Belum ada pemain lain");return}goRace()}
  else rRef.child("p/"+X.uid()+"/r").set(rdy?0:1)}
-function onlLaunch(){if(amHost())rRef.update({go:Date.now(),m:curMap,l:lapsN,sd:(Math.random()*1e9|0)+1,ev:null});else toast("Menunggu host memulai...")}
+function onlLaunch(){if(amHost())rRef.update({go:Date.now()+svOff,m:curMap,l:lapsN,sd:(Math.random()*1e9|0)+1,ev:null});else toast("Menunggu host memulai...")}
 function onlCars(){if(!RC||party.length<2)return;const u=X.uid(),o=party.filter(m=>!m.me),ps=party.map(m=>m.uid).sort(),n=ps.length,sp=Math.min(5,16.6/(n-1));
  cars.forEach((c,i)=>{c.uid=i?o[i-1].uid:u;if(i){c.rm=1;c.bot=false;const q=o[i-1],sk=q.sk&&q.sk!=="std"&&SKINS[q.sk]?SKINS[q.sk]:null,cl=sk?sk.col:cols[q.ci%cols.length],nm=sk?sk.mk():makeCar(cl),old=c.m;
   scene.remove(old);old.traverse(x=>{if(x.geometry)x.geometry.dispose();if(x.isSprite){x.material.map.dispose();x.material.dispose()}});
   c.col=cl;scene.add(nm);c.m=nm;const t=nameTag(c);nm.add(t);nm.userData.tag=t}c.d=c.lane=(ps.indexOf(c.uid)-(n-1)/2)*sp})}
 function rmStep(c,dt){const z=RB[c.uid];
- if(!z){c.miss=(c.miss||0)+dt;c.v=0;if(state==="race"&&c.miss>4&&!c.fin){c.fin=true;c.ft=raceT+999}return}
+ if(!z){c.miss=(c.miss||0)+dt;c.v=0;if(state==="race"&&c.miss>4&&!c.fin){c.fin=true;c.dnf=1;c.ft=raceT+999}return}
  c.miss=0;if(state==="count"){c.v=0;return}
  /* umur sampel: pakai jam server supaya jitter jaringan tidak bikin mobil maju-mundur */
  let age=z.T?(Date.now()+svOff-z.T)/1000:(performance.now()-z.rt)/1000;
@@ -1776,7 +1776,7 @@ function rmStep(c,dt){const z=RB[c.uid];
  else c.s+=(live?v0*dt:0)+(ts-c.s)*Math.min(1,dt*10); /* feed-forward + koreksi halus: tidak pernah ketinggalan, tidak melompat mundur */
  c.d+=(age<.15?l0*dt:0)+(td-c.d)*Math.min(1,dt*12);
  c.v=v0;c.y+=((z.y||0)-c.y)*Math.min(1,dt*18);c.air=!!z.a;c.bst=!!z.b;c.latV=l0;c.spinA=z.sa||0;c.flip=z.fp||0;c.cr=z.x?(c.cr||{t:0,s0:0,d0:0}):null;
- if(z.f&&!c.fin&&state==="race"&&raceT>2){c.fin=true;c.ft=z.ft||raceT}}
+ if(z.f&&!c.fin&&(state==="race"||state==="done")&&raceT>2){c.fin=true;c.ft=z.ft||raceT}}
 function onlTick(dt){if(!RC||state==="menu"||state==="paused")return;sT+=dt;if(sT<.033)return;sT=0;
  sRef.child(X.uid()).set({q:++sq,T:Date.now()+svOff,l:+(me.latV||0).toFixed(1),s:+me.s.toFixed(2),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),x:me.cr?1:0,sa:+(me.spinA||0).toFixed(2),fp:+(me.flip||0).toFixed(2),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
 $("bOnl").onclick=()=>{if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){show("lobby",0);show("party",1);renderParty();return}omsg("");show("onlP",1)};

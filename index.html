@@ -1107,7 +1107,7 @@ $('bResume').onclick=()=>{state=prevSt;show('pause',0)};
 const qT=()=>{if(TN&&TN.res.length<TOUR.rounds&&!confirm('Keluar dari turnamen? Biaya masuk tidak dikembalikan.'))return;toMenu();if(window.__inRoom){show('lobby',0);show('party',1);renderParty()}};
 $('bPause').onclick=pause;$('bQuit1').onclick=qT;$('bQuit2').onclick=qT;
 let mT;function msgT(t,ms){const e=$('msg');e.textContent=t;clearTimeout(mT);if(ms)mT=setTimeout(()=>e.textContent='',ms)}
-const cmp=(a,b)=>(b.fin?1e9-b.ft:b.s)-(a.fin?1e9-a.ft:a.s);
+const rsOf=c=>c.rm&&c.rs!=null?c.rs:c.s,cmp=(a,b)=>(b.fin?1e9-b.ft:rsOf(b))-(a.fin?1e9-a.ft:rsOf(a));
 function showRes(){
  state='done';endSpecUI();const r=[...cars].sort(cmp),k=r.indexOf(me)+1;recStats(k);
  let nb='';if(me.fin){const b=getBest();if(!b||me.ft<b){setBest(me.ft);nb='Rekor baru di '+MAPS[curMap].n+'!'}else nb='Rekor terbaik: '+fmt(b)}
@@ -1169,8 +1169,9 @@ function flash(m,mat,ci){m.material=mat;clearTimeout(m._t);m._t=setTimeout(()=>{
 function hitCar(t){t.cr={t:0,s0:t.s,d0:t.d};if(t===me){msgT('Tertembak!',1300);shake=1;beep(150,.4,'sawtooth',.12)}}
 function crUpdate(c,dt){const r=c.cr;r.t+=dt;c.spinA=r.t<1.2?18.85*(r.t/1.2):0;c.flip=r.t<1.2?0:Math.min(Math.PI,(r.t-1.2)*8);
  if(r.t>2.7){let ns=r.s0-30;const gb=gapS>0?Math.round((r.s0-gapS)/L)*L:0;if(gapS>0&&ns>gapS+gb-10&&ns<gapS+gb+80)ns=gapS+gb-60;c.s=ns;c.d=Math.max(-8,Math.min(8,r.d0));c.v=16;c.latV=0;c.flip=0;c.spinA=0;c.cr=null;c.imm=3}}
-function shoot(c){if(!c.sk||c.cr||c.fin||!itG)return false;let b=null,bd=230;
- for(const t of cars){if(t===c||t.fin||t.cr||t.air||t.imm>0)continue;const ds=wd(t.s-c.s);if(ds>2&&ds<bd){bd=ds;b=t}}
+const SHOT_R=90;/* jarak maksimal bisa menembak (meter); ubah angka ini untuk lebih dekat/jauh */
+function shoot(c){if(!c.sk||c.cr||c.fin||!itG)return false;let b=null,bd=SHOT_R;
+ for(const t of cars){if(t===c||t.fin||t.cr||t.air||t.imm>0)continue;const ds=wd(rsOf(t)-rsOf(c));if(ds>2&&ds<bd){bd=ds;b=t}}
  if(!b){if(c===me)msgT('Tak ada target!',800);return false}
  c.sk=0;const m=new THREE.Group();m.add(new THREE.Mesh(shG,shM));const sp=new THREE.Sprite(glowM.r);sp.scale.set(5,5,1);m.add(sp);itG.add(m);shots.push({a:c,b,t:0,m});if(c===me&&RC&&b.uid)evSend({k:'s',to:b.uid});
  if(c===me)beep(900,.2,'sawtooth',.08);if(b===me)msgT('Awas tembakan!',700);return true}
@@ -1313,12 +1314,16 @@ function follow(dt){
  if(Math.abs(cam.fov-fov)>.1){cam.fov+=(fov-cam.fov)*Math.min(1,5*dt);cam.updateProjectionMatrix()}
  shake=Math.max(0,shake-dt*2);
 }
+let pingEl=null;function pingHud(){if(!RC){if(pingEl)pingEl.style.display='none';return}
+ if(!pingEl){pingEl=document.createElement('div');pingEl.style.cssText='position:absolute;left:50%;transform:translateX(-50%);bottom:4px;font:600 11px sans-serif;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none;z-index:5';$('hud').appendChild(pingEl)}
+ let m=0,n=0;for(const k in RB){const l=RB[k].lat;if(l!=null){n++;m=Math.max(m,l)}}if(!n){pingEl.style.display='none';return}
+ const p=Math.round(m*2);pingEl.style.display='block';pingEl.textContent='Ping '+p+' ms';pingEl.style.color=p<100?'#7dff9a':p<200?'#ffd75e':'#ff6b6b'}
 let hMm=0,hSp=-1,hLp='',hTm='',hNb=-1,hSk=-1,hTp=-1;
 function hud(){
  const rk=[...cars].sort(cmp).indexOf(me)+1;
  if(rk!==lastRk){lastRk=rk;$('pos').innerHTML=rk+'<small>/'+cars.length+'</small>'}
  const lp='LAP '+Math.min(lapsN,Math.max(1,Math.floor(me.s/L)+1))+'/'+lapsN;if(lp!==hLp){hLp=lp;$('lap').textContent=lp}
- const tm=fmt(me.fin?me.ft:raceT);if(tm!==hTm){hTm=tm;$('time').textContent=tm}
+ pingHud();const tm=fmt(me.fin?me.ft:raceT);if(tm!==hTm){hTm=tm;$('time').textContent=tm}
  const sp=Math.round(me.v*3);if(sp!==hSp){hSp=sp;$('spd').textContent=sp}if(me.v*3>topSpd)topSpd=me.v*3;
  const nb=Math.round(me.nit*100);if(nb!==hNb){hNb=nb;$('nbar').style.width=nb+'%'}
  const sk1=me.sk?1:0,tp1=me.tp?1:0;if(sk1!==hSk){hSk=sk1;$('bSk').classList.toggle('hide',!sk1)}if(tp1!==hTp){hTp=tp1;$('bTp').classList.toggle('hide',!tp1)}
@@ -1787,7 +1792,7 @@ function evApply(e){if(state==="menu")return;
  else if(e.k==="p"){const it=items[e.i];if(it){it.gone=1;it.on=0;it.m.visible=false}}
  else if(e.k==="t")addTrapR(e,car);
  else if(e.k==="x"){const i=traps.findIndex(t=>t.id===e.id);if(i>=0){itG.remove(traps[i].m);traps.splice(i,1)}}
- else if(e.k==="s"){const b=cars.find(c=>c.uid===e.to);if(b){mkShot(car,b);if(b===me)msgT("Awas tembakan!",700)}}}
+ else if(e.k==="s"){const b=cars.find(c=>c.uid===e.to);if(b&&!(b===me&&Math.abs(wd(rsOf(car)-me.s))>SHOT_R+40)){mkShot(car,b);if(b===me)msgT("Awas tembakan!",700)}}}
 /* pesan masuk: permintaan teman */
 const GIFTS=[{id:"g100a",t:"Hadiah gratis 100 coin",d:"Untuk semua pemain. Ketuk Klaim!",coin:100}];
 function giftsDone(){try{const a=JSON.parse(localStorage.getItem("bt_gifts")||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}}
@@ -1854,8 +1859,8 @@ function onlCars(){if(!RC||party.length<2)return;const u=X.uid(),o=party.filter(
 function rbIn(k,r){if(!r)return;const now=performance.now(),T=+r.T||0;let b=RB[k];if(!b)b=RB[k]={a:[],pt:0,init:0,fs:null,lastRx:now,lastArr:null,j:0,D:110};
  const A=b.a,L=A.length?A[A.length-1]:null;if(L&&r.q===L.q)return;
  if(L&&(T<=L.T||T-L.T>1500)){A.length=0;b.init=0;b.fs=null;b.lastArr=null}
- else if(L&&b.lastArr!=null){const dv=Math.abs((now-b.lastArr)-(T-L.T));b.j=b.j*.92+dv*.08;b.D=Math.max(95,Math.min(260,80+2.6*b.j))}
- b.lastArr=now;b.lastRx=now;
+ else if(L&&b.lastArr!=null){const dv=Math.abs((now-b.lastArr)-(T-L.T));b.j=b.j*.92+dv*.08;b.D=Math.max(110,Math.min(280,90+3*b.j))}
+ {const lx=Date.now()+svOff-T;if(lx>-50&&lx<1500)b.lat=b.lat==null?lx:b.lat*.9+lx*.1}b.lastArr=now;b.lastRx=now;
  A.push({T,q:r.q,s:+r.s||0,d:+r.d||0,v:+r.v||0,l:+r.l||0,y:+r.y||0,a:r.a,b:r.b,f:r.f,ft:r.ft,x:r.x,sa:r.sa,fp:r.fp});if(A.length>40)A.shift()}
 /* mobil teman: diputar ulang ~0,1 detik di belakang dari buffer sampel (jitter jaringan terserap), kecepatan putar disesuaikan pelan-pelan, lalu diikuti pengikut halus */
 /* interpolasi Hermite kubik antara dua sampel; kemiringan dari sampel tetangga supaya gerak mulus (tanpa patah di tiap paket) */
@@ -1879,13 +1884,14 @@ function rmStep(c,dt){const b=RB[c.uid],now=performance.now();
   v0=z.v+(w.v-z.v)*f;y0=z.y+(w.y-z.y)*f;l0=z.l+(w.l-z.l)*f;
   const ag=(a,b)=>Math.abs(b-a)>3?(f<.5?a:b):a+(b-a)*f;sa0=ag(z.sa||0,w.sa||0);fp0=ag(z.fp||0,w.fp||0)}
  const lim=W+Math.max(0,ghAt(s0))-1.1;if(d0>lim)d0=lim;else if(d0<-lim)d0=-lim;
- if(b.fs==null||Math.abs(s0-b.fs)>50){b.fs=s0;b.fd=d0;b.ps=s0;b.pd=d0}
- else{b.fs+=s0-b.ps;b.fd+=d0-b.pd;b.ps=s0;b.pd=d0;const k=Math.min(1,dt*16);b.fs+=(s0-b.fs)*k;b.fd+=(d0-b.fd)*k}
- if(b.fs<c.s&&c.s-b.fs<6)b.fs=c.s; /* tidak pernah mundur kecuali respawn */
- c.s=b.fs;c.d=b.fd;c.v=v0;c.y=y0;c.air=!!z.a;c.bst=!!z.b;b.lv=b.lv==null?l0:b.lv+(l0-b.lv)*Math.min(1,dt*20);c.latV=b.lv;c.spinA=sa0;c.flip=fp0;c.cr=z.x?(c.cr||{t:0,s0:0,d0:0}):null;
+ if(b.fs==null||Math.abs(s0-b.fs)>50){b.fs=s0;b.fd=d0;b.ps=s0;b.pd=d0;b.o=null}
+ else{b.fs+=s0-b.ps;b.fd+=d0-b.pd;b.ps=s0;b.pd=d0;const k=Math.min(1,dt*11);b.fs+=(s0-b.fs)*k;b.fd+=(d0-b.fd)*k}
+ const ld0=Math.min(.35,Math.max(0,(b.lat==null?.12:Math.max(0,b.lat))+D/1000)*.85);b.ld=b.ld==null?ld0:b.ld+(ld0-b.ld)*Math.min(1,dt*3);const ld=b.ld;let so=b.fs+v0*ld;
+ if(b.o!=null&&so<b.o&&b.o-so<6)so=b.o; /* tidak pernah mundur kecuali respawn */
+ b.o=so;c.s=so;c.rs=N.s+N.v*Math.min(.5,Math.max(0,(Date.now()+svOff-N.T)/1000));c.d=b.fd;c.v=v0;c.y=y0;c.air=!!z.a;c.bst=!!z.b;b.lv=b.lv==null?l0:b.lv+(l0-b.lv)*Math.min(1,dt*20);c.latV=b.lv;c.spinA=sa0;c.flip=fp0;c.cr=z.x?(c.cr||{t:0,s0:0,d0:0}):null;
  if(z.f&&!c.fin&&(state==="race"||state==="done")&&raceT>2){c.fin=true;c.ft=z.ft||raceT}}
 function onlTick(dt){if(!RC||state==="menu"||state==="paused")return;sT+=dt;if(sT<.033)return;sT=0;
- sRef.child(X.uid()).set({q:++sq,T:+performance.now().toFixed(1),l:+(me.latV||0).toFixed(1),s:+me.s.toFixed(2),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),x:me.cr?1:0,sa:+(me.spinA||0).toFixed(2),fp:+(me.flip||0).toFixed(2),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
+ sRef.child(X.uid()).set({q:++sq,T:(window.__lt=Math.max((window.__lt||0)+1,Date.now()+svOff)),l:+(me.latV||0).toFixed(1),s:+me.s.toFixed(2),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),x:me.cr?1:0,sa:+(me.spinA||0).toFixed(2),fp:+(me.flip||0).toFixed(2),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
 $("bOnl").onclick=()=>{if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){show("lobby",0);show("party",1);renderParty();return}omsg("");show("onlP",1);rlOpen()};
 $("onlX").onclick=()=>{rlClose();show("onlP",0)};
 const pwHash=(pw,code)=>{const t=code+":"+pw;let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36)};

@@ -1056,7 +1056,7 @@ function resetCars(){
  cars=[...Array(n).keys()].map(i=>{const col=i?bc[i-1]:(skin==='std'?cols[colorIdx]:SKINS[skin].col),m=(i===0&&skin!=='std')?SKINS[skin].mk():makeCar(col);scene.add(m);
   return{m,i,col,name:info[i].name,id:info[i].id,s:-4,d:LNS[i],v:0,latV:0,nit:.5,boostT:0,spinT:0,spinA:0,padCd:0,fin:false,ft:0,
    bot:i>0,lv:info[i].lv|0,vmax:72*(i>0?BLV[info[i].lv|0].m:1),air:false,y:0,vy:0,lane:LNS[i],sk:0,tp:0,slowT:0,imm:0,flip:0,sand:false,cr:null,skT:0,gt:{},in:{steer:0,brake:0,nit:false}}});
- me=cars[0];raceT=0;lastRk=0;endSpecUI();ONL=party.length>1;
+ me=cars[0];raceT=0;lastRk=0;try{MH.length=0;ORD=[]}catch(e){}endSpecUI();ONL=party.length>1;
  if(ONL)cars.forEach(c=>{const t=nameTag(c);c.m.add(t);c.m.userData.tag=t;t.visible=c!==me});
  obs.forEach(o=>{o.hit=false;o.t=0;o.fl=0;o.h=0;o.by=null;o.m.visible=true;if(o.s0!=null&&(o.s!==o.s0||o.d!==o.d0)){o.s=o.s0;o.d=o.d0;orient(o.m,frame(o.s),o.d,oy[o.ty]);o.y=o.m.position.y}o.m.position.y=o.y;o.m.rotation.x=0});
  if(tuns.length){tuns.forEach(t=>t.on=false);hemiL.intensity=baseHemi;if(tun&&tun.water){scene.background.copy(tun.nc);scene.fog.color.copy(tun.nc)}}
@@ -1113,7 +1113,15 @@ $('bResume').onclick=()=>{state=prevSt;show('pause',0)};
 const qT=()=>{if(TN&&TN.res.length<TOUR.rounds&&!confirm('Keluar dari turnamen? Biaya masuk tidak dikembalikan.'))return;toMenu();if(window.__inRoom){show('lobby',0);show('party',1);renderParty()}};
 $('bPause').onclick=pause;$('bQuit1').onclick=qT;$('bQuit2').onclick=qT;
 let mT;function msgT(t,ms){const e=$('msg');e.textContent=t;clearTimeout(mT);if(ms)mT=setTimeout(()=>e.textContent='',ms)}
-const rsOf=c=>c.rm&&c.rs!=null?c.rs:c.s,cmp=(a,b)=>(b.fin?1e9-b.ft:rsOf(b))-(a.fin?1e9-a.ft:rsOf(a));
+const rsOf=c=>c.rm&&c.rs!=null?c.rs:c.s;
+const MH=[];let ORD=[];
+/* posisi di lintasan pada jam server Tr dari riwayat sampel (interpolasi; di luar rentang: pakai ujung / perkiraan kecepatan) */
+function histAt(A,Tr){const n=A.length;if(!n)return null;if(Tr<=A[0].T)return A[0].s;const L=A[n-1];if(Tr>=L.T)return L.s+(L.v||0)*Math.min(.3,(Tr-L.T)/1000);
+ for(let i=n-1;i>0;i--){const a=A[i-1],b=A[i];if(Tr>=a.T){const f=(Tr-a.T)/Math.max(1,b.T-a.T);return a.s+(b.s-a.s)*f}}return A[0].s}
+function rkOf(c){if(!RC||!c.uid)return c.s;const Tr=Date.now()+svOff-400;let v=null;if(c===me)v=histAt(MH,Tr);else{const b=RB[c.uid];if(b)v=histAt(b.a,Tr)}return v==null?(c.rm?rsOf(c):c.s):v}
+const ckey=c=>c.uid||('i'+c.i);
+const cmp=(a,b)=>{if(a.fin||b.fin)return(b.fin?1e9-b.ft:rkOf(b))-(a.fin?1e9-a.ft:rkOf(a));
+ const d=rkOf(b)-rkOf(a);if(RC&&Math.abs(d)<1.2){const x=ORD.indexOf(ckey(a)),y=ORD.indexOf(ckey(b));if(x>=0&&y>=0&&x!==y)return x-y}return d};
 function showRes(){
  state='done';endSpecUI();const r=[...cars].sort(cmp),k=r.indexOf(me)+1;recStats(k);
  let nb='';if(me.fin){const b=getBest();if(!b||me.ft<b){setBest(me.ft);nb='Rekor baru di '+MAPS[curMap].n+'!'}else nb='Rekor terbaik: '+fmt(b)}
@@ -1326,7 +1334,7 @@ let pingEl=null;function pingHud(){if(!RC){if(pingEl)pingEl.style.display='none'
  const p=Math.round(m*2);pingEl.style.display='block';pingEl.textContent='Ping '+p+' ms';pingEl.style.color=p<100?'#7dff9a':p<200?'#ffd75e':'#ff6b6b'}
 let hMm=0,hSp=-1,hLp='',hTm='',hNb=-1,hSk=-1,hTp=-1;
 function hud(){
- const rk=[...cars].sort(cmp).indexOf(me)+1;
+ const srt=[...cars].sort(cmp);ORD=srt.map(ckey);const rk=srt.indexOf(me)+1;
  if(rk!==lastRk){lastRk=rk;$('pos').innerHTML=rk+'<small>/'+cars.length+'</small>'}
  const lp='LAP '+Math.min(lapsN,Math.max(1,Math.floor(me.s/L)+1))+'/'+lapsN;if(lp!==hLp){hLp=lp;$('lap').textContent=lp}
  pingHud();const tm=fmt(me.fin?me.ft:raceT);if(tm!==hTm){hTm=tm;$('time').textContent=tm}
@@ -1898,7 +1906,7 @@ function rmStep(c,dt){const b=RB[c.uid],now=performance.now();
  b.o=so;c.s=so;c.rs=N.s+N.v*Math.min(.5,Math.max(0,(Date.now()+svOff-N.T)/1000));c.d=b.fd;c.v=v0;c.y=y0;c.air=!!z.a;c.bst=!!z.b;b.lv=b.lv==null?l0:b.lv+(l0-b.lv)*Math.min(1,dt*20);c.latV=b.lv;c.spinA=sa0;c.flip=fp0;c.cr=z.x?(c.cr||{t:0,s0:0,d0:0}):null;
  if(z.f&&!c.fin&&(state==="race"||state==="done")&&raceT>2){c.fin=true;c.ft=z.ft||raceT}}
 function onlTick(dt){if(!RC||state==="menu"||state==="paused")return;sT+=dt;if(sT<.033)return;sT=0;
- sRef.child(X.uid()).set({q:++sq,T:(window.__lt=Math.max((window.__lt||0)+1,Date.now()+svOff)),l:+(me.latV||0).toFixed(1),s:+me.s.toFixed(2),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),x:me.cr?1:0,sa:+(me.spinA||0).toFixed(2),fp:+(me.flip||0).toFixed(2),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0})}
+ sRef.child(X.uid()).set({q:++sq,T:(window.__lt=Math.max((window.__lt||0)+1,Date.now()+svOff)),l:+(me.latV||0).toFixed(1),s:+me.s.toFixed(2),d:+me.d.toFixed(2),v:+me.v.toFixed(1),y:+(me.y||0).toFixed(1),x:me.cr?1:0,sa:+(me.spinA||0).toFixed(2),fp:+(me.flip||0).toFixed(2),a:me.air?1:0,b:me.bst?1:0,f:me.fin?1:0,ft:me.ft||0});MH.push({T:window.__lt,s:me.s});if(MH.length>60)MH.shift()}
 $("bOnl").onclick=()=>{if(!X.db||!X.uid){toast("Mabar butuh login online");return}if(RC){show("lobby",0);show("party",1);renderParty();return}omsg("");show("onlP",1);rlOpen()};
 $("onlX").onclick=()=>{rlClose();show("onlP",0)};
 const pwHash=(pw,code)=>{const t=code+":"+pw;let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<t.length;i++){const c=t.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return(4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
